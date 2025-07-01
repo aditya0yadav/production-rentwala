@@ -1,0 +1,71 @@
+{
+  "company": {
+    "name": "Rentwala",
+    "tagline": "Your Dream Property Awaits",
+    "description": "India's leading real estate platform dedicated to helping you find your dream property across major Indian cities."
+  },
+  "contact": {
+    "phones": [
+      "+91 98765 43210",
+      "+91 87654 32109"
+    ],
+    "emails": [
+      "info@rentwala.com",
+      "support@rentwala.com"
+    ],
+    "legal": {
+      "email": "legal@rentwala.com",
+      "phone": "+91 98765 43210"
+    }
+  },
+  "addresses": {
+    "headquarters": {
+      "street": "DLF Cyber City, Sector 25",
+      "city": "Gurgaon",
+      "state": "Haryana",
+      "pincode": "122002",
+      "full": "DLF Cyber City, Sector 25, Gurgaon, Haryana 122002"
+    },
+    "offices": [
+      {
+        "city": "Gurgaon",
+        "address": "DLF Cyber City, Sector 25, Gurgaon, Haryana 122002",
+        "phone": "+91 98765 43210",
+        "email": "gurgaon@rentwala.com"
+      },
+      {
+        "city": "Delhi",
+        "address": "Connaught Place, Central Delhi, New Delhi 110001",
+        "phone": "+91 87654 32109",
+        "email": "delhi@rentwala.com"
+      },
+      {
+        "city": "Noida",
+        "address": "Sector 62, Noida, Uttar Pradesh 201309",
+        "phone": "+91 76543 21098",
+        "email": "noida@rentwala.com"
+      }
+    ]
+  },
+  "social": {
+    "facebook": "https://facebook.com/rentwala",
+    "twitter": "https://twitter.com/rentwala",
+    "instagram": "https://instagram.com/rentwala",
+    "linkedin": "https://linkedin.com/company/rentwala"
+  },
+  "business": {
+    "workingHours": {
+      "weekdays": "Mon - Fri: 9:00 AM - 7:00 PM",
+      "weekends": "Sat - Sun: 10:00 AM - 5:00 PM"
+    },
+    "established": "2012",
+    "experience": "12+",
+    "locations": ["Gurgaon", "Delhi", "Noida", "Faridabad", "Ghaziabad"]
+  },
+  "stats": {
+    "propertiesSold": "25,000+",
+    "happyClients": "15,000+",
+    "yearsExperience": "12+",
+    "successRate": "99%"
+  }
+}
