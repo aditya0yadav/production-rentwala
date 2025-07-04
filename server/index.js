@@ -16,19 +16,24 @@ const app = express();
 const PORT = 5000;
 
 // Middleware
-app.use(cors());
-app.use(express.json());
-app.use('/uploads', express.static('uploads'));
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  credentials: true
+}));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Create uploads directory if it doesn't exist
-if (!fs.existsSync('uploads')) {
-  fs.mkdirSync('uploads');
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/');
+    cb(null, uploadsDir);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -39,17 +44,17 @@ const storage = multer.diskStorage({
 const upload = multer({ 
   storage: storage,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
+    fileSize: 10 * 1024 * 1024 // 10MB limit
   },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif/;
+    const allowedTypes = /jpeg|jpg|png|gif|webp/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = allowedTypes.test(file.mimetype);
     
     if (mimetype && extname) {
       return cb(null, true);
     } else {
-      cb(new Error('Only image files are allowed'));
+      cb(new Error('Only image files are allowed (jpeg, jpg, png, gif, webp)'));
     }
   }
 });
@@ -58,6 +63,16 @@ const upload = multer({
 const adminCredentials = {
   username: 'admin',
   password: 'admin123'
+};
+
+// Error handling middleware
+const handleError = (res, error, message = 'An error occurred') => {
+  console.error('Error:', error);
+  res.status(500).json({
+    success: false,
+    message: message,
+    error: error.message
+  });
 };
 
 // PROPERTY ROUTES
@@ -102,11 +117,7 @@ app.get('/api/properties', async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching properties',
-      error: error.message
-    });
+    handleError(res, error, 'Error fetching properties');
   }
 });
 
@@ -127,11 +138,7 @@ app.get('/api/properties/:id', async (req, res) => {
       data: property
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching property',
-      error: error.message
-    });
+    handleError(res, error, 'Error fetching property');
   }
 });
 
@@ -151,11 +158,7 @@ app.get('/api/testimonials', async (req, res) => {
       data: testimonials
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching testimonials',
-      error: error.message
-    });
+    handleError(res, error, 'Error fetching testimonials');
   }
 });
 
@@ -176,11 +179,7 @@ app.get('/api/faqs', async (req, res) => {
       data: faqs
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching FAQs',
-      error: error.message
-    });
+    handleError(res, error, 'Error fetching FAQs');
   }
 });
 
@@ -204,11 +203,7 @@ app.post('/api/admin/login', (req, res) => {
       });
     }
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Login error',
-      error: error.message
-    });
+    handleError(res, error, 'Login error');
   }
 });
 
@@ -226,31 +221,52 @@ app.get('/api/admin/properties', async (req, res) => {
       total: total
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching properties',
-      error: error.message
-    });
+    handleError(res, error, 'Error fetching properties');
   }
 });
 
 // Create new property
 app.post('/api/admin/properties', upload.array('images', 10), async (req, res) => {
   try {
+    console.log('Creating property with data:', req.body);
+    console.log('Files received:', req.files);
+
+    // Process uploaded images
     const images = req.files ? req.files.map(file => `/uploads/${file.filename}`) : [];
     
+    // Parse amenities if it's a string
+    let amenities = [];
+    if (req.body.amenities) {
+      try {
+        amenities = typeof req.body.amenities === 'string' 
+          ? JSON.parse(req.body.amenities) 
+          : req.body.amenities;
+      } catch (e) {
+        amenities = req.body.amenities.split(',').map(a => a.trim());
+      }
+    }
+
     const propertyData = {
-      ...req.body,
-      images: images,
-      amenities: req.body.amenities ? JSON.parse(req.body.amenities) : [],
-      featured: req.body.featured === 'true',
-      price: parseInt(req.body.price) || 0,
+      title: req.body.title || '',
+      description: req.body.description || '',
       bedrooms: parseInt(req.body.bedrooms) || 1,
       bathrooms: parseInt(req.body.bathrooms) || 1,
+      area: req.body.area || '',
+      city: req.body.city || '',
+      state: req.body.state || '',
+      pincode: req.body.pincode || '',
+      price: parseInt(req.body.price) || 0,
+      type: req.body.type || 'Apartment',
+      status: req.body.status || 'For Sale',
+      featured: req.body.featured === 'true' || req.body.featured === true,
+      amenities: amenities,
+      images: images,
       location: `${req.body.city}, ${req.body.state}`
     };
     
     propertyData.priceFormatted = `₹${parseInt(propertyData.price).toLocaleString('en-IN')}`;
+    
+    console.log('Processed property data:', propertyData);
     
     const property = new Property(propertyData);
     const id = await property.save();
@@ -258,14 +274,11 @@ app.post('/api/admin/properties', upload.array('images', 10), async (req, res) =
     res.status(201).json({
       success: true,
       message: 'Property created successfully',
-      data: { ...property, id }
+      data: { ...propertyData, id }
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error creating property',
-      error: error.message
-    });
+    console.error('Error creating property:', error);
+    handleError(res, error, 'Error creating property');
   }
 });
 
@@ -285,14 +298,32 @@ app.put('/api/admin/properties/:id', upload.array('images', 10), async (req, res
     const keepExistingImages = req.body.existingImages ? JSON.parse(req.body.existingImages) : [];
     const allImages = [...keepExistingImages, ...newImages];
     
+    let amenities = property.amenities;
+    if (req.body.amenities) {
+      try {
+        amenities = typeof req.body.amenities === 'string' 
+          ? JSON.parse(req.body.amenities) 
+          : req.body.amenities;
+      } catch (e) {
+        amenities = req.body.amenities.split(',').map(a => a.trim());
+      }
+    }
+
     const updatedData = {
-      ...req.body,
-      images: allImages,
-      amenities: req.body.amenities ? JSON.parse(req.body.amenities) : property.amenities,
-      featured: req.body.featured === 'true',
-      price: parseInt(req.body.price) || property.price,
+      title: req.body.title || property.title,
+      description: req.body.description || property.description,
       bedrooms: parseInt(req.body.bedrooms) || property.bedrooms,
       bathrooms: parseInt(req.body.bathrooms) || property.bathrooms,
+      area: req.body.area || property.area,
+      city: req.body.city || property.city,
+      state: req.body.state || property.state,
+      pincode: req.body.pincode || property.pincode,
+      price: parseInt(req.body.price) || property.price,
+      type: req.body.type || property.type,
+      status: req.body.status || property.status,
+      featured: req.body.featured === 'true' || req.body.featured === true,
+      amenities: amenities,
+      images: allImages,
       location: `${req.body.city || property.city}, ${req.body.state || property.state}`
     };
     
@@ -307,11 +338,7 @@ app.put('/api/admin/properties/:id', upload.array('images', 10), async (req, res
       data: property
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error updating property',
-      error: error.message
-    });
+    handleError(res, error, 'Error updating property');
   }
 });
 
@@ -335,11 +362,7 @@ app.delete('/api/admin/properties/:id', async (req, res) => {
       data: property
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error deleting property',
-      error: error.message
-    });
+    handleError(res, error, 'Error deleting property');
   }
 });
 
@@ -356,25 +379,29 @@ app.get('/api/admin/testimonials', async (req, res) => {
       total: testimonials.length
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching testimonials',
-      error: error.message
-    });
+    handleError(res, error, 'Error fetching testimonials');
   }
 });
 
 // Create new testimonial
 app.post('/api/admin/testimonials', upload.single('profileImage'), async (req, res) => {
   try {
-    const profileImage = req.file ? `/uploads/${req.file.filename}` : req.body.profileImage;
+    console.log('Creating testimonial with data:', req.body);
+    console.log('File received:', req.file);
+
+    const profileImage = req.file ? `/uploads/${req.file.filename}` : req.body.profileImage || '';
     
     const testimonialData = {
-      ...req.body,
+      title: req.body.title || '',
+      content: req.body.content || '',
+      author: req.body.author || '',
+      location: req.body.location || '',
       profileImage: profileImage,
-      featured: req.body.featured === 'true',
-      rating: parseInt(req.body.rating) || 5
+      rating: parseInt(req.body.rating) || 5,
+      featured: req.body.featured === 'true' || req.body.featured === true
     };
+    
+    console.log('Processed testimonial data:', testimonialData);
     
     const testimonial = new Testimonial(testimonialData);
     const id = await testimonial.save();
@@ -382,14 +409,11 @@ app.post('/api/admin/testimonials', upload.single('profileImage'), async (req, r
     res.status(201).json({
       success: true,
       message: 'Testimonial created successfully',
-      data: { ...testimonial, id }
+      data: { ...testimonialData, id }
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error creating testimonial',
-      error: error.message
-    });
+    console.error('Error creating testimonial:', error);
+    handleError(res, error, 'Error creating testimonial');
   }
 });
 
@@ -409,10 +433,13 @@ app.put('/api/admin/testimonials/:id', upload.single('profileImage'), async (req
                         req.body.profileImage || testimonial.profileImage;
     
     const updatedData = {
-      ...req.body,
+      title: req.body.title || testimonial.title,
+      content: req.body.content || testimonial.content,
+      author: req.body.author || testimonial.author,
+      location: req.body.location || testimonial.location,
       profileImage: profileImage,
-      featured: req.body.featured === 'true',
-      rating: parseInt(req.body.rating) || testimonial.rating
+      rating: parseInt(req.body.rating) || testimonial.rating,
+      featured: req.body.featured === 'true' || req.body.featured === true
     };
     
     Object.assign(testimonial, updatedData);
@@ -424,11 +451,7 @@ app.put('/api/admin/testimonials/:id', upload.single('profileImage'), async (req
       data: testimonial
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error updating testimonial',
-      error: error.message
-    });
+    handleError(res, error, 'Error updating testimonial');
   }
 });
 
@@ -452,11 +475,7 @@ app.delete('/api/admin/testimonials/:id', async (req, res) => {
       data: testimonial
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error deleting testimonial',
-      error: error.message
-    });
+    handleError(res, error, 'Error deleting testimonial');
   }
 });
 
@@ -473,22 +492,24 @@ app.get('/api/admin/faqs', async (req, res) => {
       total: faqs.length
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching FAQs',
-      error: error.message
-    });
+    handleError(res, error, 'Error fetching FAQs');
   }
 });
 
 // Create new FAQ
 app.post('/api/admin/faqs', async (req, res) => {
   try {
+    console.log('Creating FAQ with data:', req.body);
+
     const faqData = {
-      ...req.body,
-      featured: req.body.featured === 'true',
+      question: req.body.question || '',
+      answer: req.body.answer || '',
+      category: req.body.category || 'General',
+      featured: req.body.featured === 'true' || req.body.featured === true,
       order: parseInt(req.body.order) || 0
     };
+    
+    console.log('Processed FAQ data:', faqData);
     
     const faq = new FAQ(faqData);
     const id = await faq.save();
@@ -496,14 +517,11 @@ app.post('/api/admin/faqs', async (req, res) => {
     res.status(201).json({
       success: true,
       message: 'FAQ created successfully',
-      data: { ...faq, id }
+      data: { ...faqData, id }
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error creating FAQ',
-      error: error.message
-    });
+    console.error('Error creating FAQ:', error);
+    handleError(res, error, 'Error creating FAQ');
   }
 });
 
@@ -520,8 +538,10 @@ app.put('/api/admin/faqs/:id', async (req, res) => {
     }
     
     const updatedData = {
-      ...req.body,
-      featured: req.body.featured === 'true',
+      question: req.body.question || faq.question,
+      answer: req.body.answer || faq.answer,
+      category: req.body.category || faq.category,
+      featured: req.body.featured === 'true' || req.body.featured === true,
       order: parseInt(req.body.order) || faq.order
     };
     
@@ -534,11 +554,7 @@ app.put('/api/admin/faqs/:id', async (req, res) => {
       data: faq
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error updating FAQ',
-      error: error.message
-    });
+    handleError(res, error, 'Error updating FAQ');
   }
 });
 
@@ -562,11 +578,7 @@ app.delete('/api/admin/faqs/:id', async (req, res) => {
       data: faq
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error deleting FAQ',
-      error: error.message
-    });
+    handleError(res, error, 'Error deleting FAQ');
   }
 });
 
@@ -604,21 +616,19 @@ app.get('/api/admin/stats', async (req, res) => {
       data: stats
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching statistics',
-      error: error.message
-    });
+    handleError(res, error, 'Error fetching statistics');
   }
 });
 
-// Error handling middleware
+// Global error handling middleware
 app.use((error, req, res, next) => {
+  console.error('Global error handler:', error);
+  
   if (error instanceof multer.MulterError) {
     if (error.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({
         success: false,
-        message: 'File too large. Maximum size is 5MB.'
+        message: 'File too large. Maximum size is 10MB.'
       });
     }
   }
@@ -627,6 +637,15 @@ app.use((error, req, res, next) => {
     success: false,
     message: 'Something went wrong!',
     error: error.message
+  });
+});
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Server is running',
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -639,7 +658,8 @@ process.on('SIGINT', () => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  console.log('Admin credentials: username=admin, password=admin123');
-  console.log('Database initialized with sample data');
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`📊 Admin credentials: username=admin, password=admin123`);
+  console.log(`💾 Database initialized with sample data`);
+  console.log(`📁 Uploads directory: ${uploadsDir}`);
 });

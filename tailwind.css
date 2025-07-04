@@ -9,13 +9,13 @@
 }
 
 :root {
-  --primary-purple: #7886C7;
-  --primary-purple-dark: #6d28d9;
-  --primary-purple-light: #8b5cf6;
-  --secondary-purple: #a78bfa;
-  --accent-purple: #c4b5fd;
-  --light-purple: #ddd6fe;
-  --extra-light-purple: #f5f3ff;
+  --primary-green: #22c55e;
+  --primary-green-dark: #15803d;
+  --primary-green-light: #4ade80;
+  --secondary-green: #86efac;
+  --accent-green: #bbf7d0;
+  --light-green: #dcfce7;
+  --extra-light-green: #f0fdf4;
   --white: #ffffff;
   --gray-50: #f9fafb;
   --gray-100: #f3f4f6;
@@ -41,7 +41,7 @@
     --input: 214.3 31.8% 91.4%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 47.4% 11.2%;
-    --primary: 262.1 83.3% 57.8%;
+    --primary: 142.1 76.2% 36.3%;
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -49,7 +49,7 @@
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 100% 50%;
     --destructive-foreground: 210 40% 98%;
-    --ring: 262.1 83.3% 57.8%;
+    --ring: 142.1 76.2% 36.3%;
     --radius: 0.5rem;
   }
 }
@@ -67,17 +67,17 @@
 }
 
 .gradient-bg {
-  background: linear-gradient(135deg, #f5f3ff 0%, #ddd6fe 100%);
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
 }
 
-.purple-gradient {
-  background: linear-gradient(135deg, #7886C7 0%, #6d28d9 100%);
+.green-gradient {
+  background: linear-gradient(135deg, #22c55e 0%, #15803d 100%);
 }
 
 .hero-pattern {
   background-image: 
-    radial-gradient(circle at 25px 25px, rgba(120, 134, 199, 0.1) 2px, transparent 0),
-    radial-gradient(circle at 75px 75px, rgba(120, 134, 199, 0.05) 2px, transparent 0);
+    radial-gradient(circle at 25px 25px, rgba(34, 197, 94, 0.1) 2px, transparent 0),
+    radial-gradient(circle at 75px 75px, rgba(34, 197, 94, 0.05) 2px, transparent 0);
   background-size: 100px 100px;
 }
 
@@ -88,7 +88,7 @@
 }
 
 .shimmer {
-  background: linear-gradient(90deg, transparent, rgba(120, 134, 199, 0.2), transparent);
+  background: linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.2), transparent);
   background-size: 200px 100%;
   animation: shimmer 2s infinite;
 }

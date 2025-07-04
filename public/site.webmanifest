@@ -1,0 +1,26 @@
+{
+  "name": "Rentwala - Find Your Dream Property in India",
+  "short_name": "Rentwala",
+  "description": "India's leading real estate platform with 25,000+ properties across Delhi-NCR",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#22c55e",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["business", "real estate", "property"],
+  "lang": "en-IN",
+  "scope": "/",
+  "prefer_related_applications": false
+}
