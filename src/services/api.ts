@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'https://sturdy-space-rotary-phone-wrvqrjwgqwqj39r4w-5000.app.github.dev/api';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -140,6 +140,7 @@ class ApiService {
 
   // Admin API methods
   async adminLogin(credentials: { username: string; password: string }): Promise<ApiResponse<{ token: string }>> {
+    console.log(credentials)
     return this.request<{ token: string }>('/admin/login', {
       method: 'POST',
       body: JSON.stringify(credentials),

@@ -17,7 +17,7 @@ const PORT = 5000;
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'https://sturdy-space-rotary-phone-wrvqrjwgqwqj39r4w-5173.app.github.dev/'],
   credentials: true
 }));
 app.use(express.json({ limit: '50mb' }));
@@ -189,6 +189,7 @@ app.get('/api/faqs', async (req, res) => {
 app.post('/api/admin/login', (req, res) => {
   try {
     const { username, password } = req.body;
+    console.log(username,password) ;
     
     if (username === adminCredentials.username && password === adminCredentials.password) {
       res.json({

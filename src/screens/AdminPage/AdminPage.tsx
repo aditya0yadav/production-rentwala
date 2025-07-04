@@ -5,13 +5,11 @@ import {
   Trash2, 
   Save, 
   X, 
-  Upload,
   Home,
   MessageSquare,
   HelpCircle,
   BarChart3,
   LogOut,
-  Eye,
   Star,
   MapPin,
   Bed,
@@ -120,6 +118,7 @@ export const AdminPage = (): JSX.Element => {
     setLoading(true);
     try {
       const response = await apiService.adminLogin(loginData);
+      console.log(response)
       if (response.success) {
         localStorage.setItem('adminToken', response.data.token);
         setIsLoggedIn(true);
